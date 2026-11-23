@@ -32,6 +32,12 @@
 - Verified locally: `.\mvnw.cmd -B verify` → BUILD SUCCESS, 2/2 tests pass
   (local `JAVA_HOME` had to be overridden to the installed JDK 21 for the
   build command — the machine's default `JAVA_HOME` points at JDK 11).
-- Commits so far on `slice-1-scaffold-ci`: scaffold + health test + repo
-  hygiene, then the CI workflow. Nothing pushed, nothing merged, `main`
-  untouched.
+- Squash-merged to `main` as PR #1 (commit 63e7fd0); branch `slice-1-scaffold-ci` deleted.
+
+## Slice 2: booking-state-machine (branch `slice-2-booking-state-machine`)
+
+- Branched from `main`. Reordered `.gitattributes` so `* text=auto` is first and the specific `/mvnw` and `*.cmd` rules come after it.
+- Wrote tests first: `MutableClock` (getZone/withZone/instant/advance), `BookingExpiryTest`, `BookingTest`; `ReservationLabApplicationTests` now asserts `booking.hold-duration` binds to 10m. `BookingStatusTransitionTest` left to Max.
+- Added `BookingStatus.canMoveTo` (switch, no default), `IllegalTransitionException`, `Booking` record, `BookingProperties` (+ `booking.hold-duration: 10m`, `@ConfigurationPropertiesScan`), `BookingRepository` + `InMemoryBookingRepository`.
+- `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 9 tests pass, no `Thread.sleep` in `src/`. Committed on the branch; nothing pushed.
+- Fixed misplaced `junit-jupiter-params` dependency in `pom.xml` (was outside `<dependencies>`); added Max's `BookingStatusTransitionTest`. `verify` green, 34 tests.
