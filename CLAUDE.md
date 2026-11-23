@@ -15,3 +15,4 @@
 - Retry rule (gateway): retry on 5xx, or when any cause in the exception chain is an `IOException` (this covers `SocketTimeoutException` and connection refused). Never retry 4xx, especially not 402.
 - PR description in plain words: what changed, how to run it, what it tests, what you did not do.
 - If a requirement is unclear, ask instead of guessing.
+- Never add Co-Authored-By or 'Generated with Claude' lines to commits, PR titles or PR bodies.

@@ -41,3 +41,10 @@
 - Added `BookingStatus.canMoveTo` (switch, no default), `IllegalTransitionException`, `Booking` record, `BookingProperties` (+ `booking.hold-duration: 10m`, `@ConfigurationPropertiesScan`), `BookingRepository` + `InMemoryBookingRepository`.
 - `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 9 tests pass, no `Thread.sleep` in `src/`. Committed on the branch; nothing pushed.
 - Fixed misplaced `junit-jupiter-params` dependency in `pom.xml` (was outside `<dependencies>`); added Max's `BookingStatusTransitionTest`. `verify` green, 34 tests.
+
+## Slice 3: booking-api (branch `slice-3-booking-api`)
+
+- Branched from `main` (b7291c1, slice 2 merged as PR #2). Housekeeping commit: merged `includeCoAuthoredBy: false` into the existing `.claude/settings.json` (kept its deny/ask rules) and added the no-attribution rule to `CLAUDE.md`. `spring-boot-starter-validation` was already in `pom.xml`.
+- Test support first: `MutableClock.reset`, `TestClockConfig` (@Primary MutableClock), `ApiTestBase` (RANDOM_PORT, resets clock + repository), `HealthApiTest` moved onto it; wrote `BookingApiTest` (create, get, 404, cancel, cancel twice 409, expiry).
+- Added `CreateBookingRequest` (seats `Integer`, @NotNull @Min(1) @Max(6)), `BookingResponse`, `BookingNotFoundException`, `BookingService`, `BookingController`, `InMemoryBookingRepository.deleteAll()`, and `common/ApiExceptionHandler` (VALIDATION_FAILED for bean validation and unreadable bodies, BOOKING_NOT_FOUND, ILLEGAL_TRANSITION; ProblemDetail + `code`).
+- `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 40 tests. Committed on the branch; nothing pushed.

@@ -22,4 +22,9 @@ public class InMemoryBookingRepository implements BookingRepository {
 	public Optional<Booking> findById(UUID id) {
 		return Optional.ofNullable(store.get(id));
 	}
+
+	/** For test reset only. */
+	public void deleteAll() {
+		store.clear();
+	}
 }
