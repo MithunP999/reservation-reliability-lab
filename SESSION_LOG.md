@@ -40,3 +40,4 @@
 - Wrote tests first: `MutableClock` (getZone/withZone/instant/advance), `BookingExpiryTest`, `BookingTest`; `ReservationLabApplicationTests` now asserts `booking.hold-duration` binds to 10m. `BookingStatusTransitionTest` left to Max.
 - Added `BookingStatus.canMoveTo` (switch, no default), `IllegalTransitionException`, `Booking` record, `BookingProperties` (+ `booking.hold-duration: 10m`, `@ConfigurationPropertiesScan`), `BookingRepository` + `InMemoryBookingRepository`.
 - `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 9 tests pass, no `Thread.sleep` in `src/`. Committed on the branch; nothing pushed.
+- Fixed misplaced `junit-jupiter-params` dependency in `pom.xml` (was outside `<dependencies>`); added Max's `BookingStatusTransitionTest`. `verify` green, 34 tests.
