@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: build
@@ -17,3 +20,34 @@ jobs:
           java-version: '21'
           cache: maven
       - run: ./mvnw -B verify
+      # Keep the raw results on every run (also failed ones) so a red build can still be inspected.
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: allure-results
+          path: target/allure-results
+      # Report + Pages artifact only on push to main, and only if verify passed (no always()).
+      - run: ./mvnw -B allure:report
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - uses: actions/upload-pages-artifact@v5
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          path: target/site/allure-maven-plugin
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/configure-pages@v6
+      - id: deployment
+        uses: actions/deploy-pages@v5

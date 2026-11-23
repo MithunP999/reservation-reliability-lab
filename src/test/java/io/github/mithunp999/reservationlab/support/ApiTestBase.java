@@ -7,6 +7,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 
 import io.github.mithunp999.reservationlab.booking.InMemoryBookingRepository;
+import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -22,9 +23,17 @@ public abstract class ApiTestBase {
 	@Autowired
 	InMemoryBookingRepository bookings;
 
+	private static boolean allureFilterAdded;
+
 	@BeforeEach
 	void resetState() {
 		RestAssured.port = port;
+		// Register the Allure filter once for the whole JVM; adding it per test would stack
+		// duplicate request/response attachments.
+		if (!allureFilterAdded) {
+			RestAssured.filters(new AllureRestAssured());
+			allureFilterAdded = true;
+		}
 		clock.reset(TestClockConfig.START);
 		bookings.deleteAll();
 	}
