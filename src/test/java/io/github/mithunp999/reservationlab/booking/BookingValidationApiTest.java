@@ -1,7 +1,10 @@
 package io.github.mithunp999.reservationlab.booking;
 
 import io.github.mithunp999.reservationlab.support.ApiTestBase;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import io.restassured.http.ContentType;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -14,7 +17,10 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 
-class BookingValidationAPITest extends ApiTestBase {
+@Feature("Booking")
+@Story("Validation")
+@DisplayName("Booking validation API")
+class BookingValidationApiTest extends ApiTestBase {
 
     static Stream<Arguments> badBodies() {
         return Stream.of(
@@ -28,6 +34,7 @@ class BookingValidationAPITest extends ApiTestBase {
     }
 
     @ParameterizedTest(name = "{0}")
+    @DisplayName("Invalid body returns 400 with a field error")
     @MethodSource("badBodies")
     void invalidBodyReturns400WithFieldError(String name, Map<String, Object> body, String field) {
         given()
@@ -42,6 +49,7 @@ class BookingValidationAPITest extends ApiTestBase {
     }
 
     @Test
+    @DisplayName("Malformed JSON returns 400 VALIDATION_FAILED")
     void malformedJsonReturns400WithValidationFailedCode() {
         given()
             .contentType(ContentType.JSON)

@@ -8,12 +8,17 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import io.github.mithunp999.reservationlab.support.ApiTestBase;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
+@Feature("Booking")
+@DisplayName("Booking API")
 class BookingApiTest extends ApiTestBase {
 
 	private static final Map<String, Object> VALID = Map.of(
@@ -24,6 +29,8 @@ class BookingApiTest extends ApiTestBase {
 	}
 
 	@Test
+	@Story("Create")
+	@DisplayName("POST /bookings returns 201 with Location and a HELD booking")
 	void createReturns201WithLocationAndHeldBooking() {
 		Response r = create();
 		String id = r.path("id");
@@ -37,6 +44,8 @@ class BookingApiTest extends ApiTestBase {
 	}
 
 	@Test
+	@Story("Get")
+	@DisplayName("GET /bookings/{id} returns the booking")
 	void getReturnsTheBooking() {
 		String id = create().path("id");
 		given().get("/bookings/{id}", id).then().statusCode(200)
@@ -45,12 +54,16 @@ class BookingApiTest extends ApiTestBase {
 	}
 
 	@Test
+	@Story("Get")
+	@DisplayName("GET unknown id returns 404 BOOKING_NOT_FOUND")
 	void getUnknownIdReturns404() {
 		given().get("/bookings/{id}", UUID.randomUUID()).then().statusCode(404)
 				.body("code", equalTo("BOOKING_NOT_FOUND"));
 	}
 
 	@Test
+	@Story("Cancel")
+	@DisplayName("Cancel returns 200 and CANCELLED")
 	void cancelReturns200AndCancelled() {
 		String id = create().path("id");
 		given().post("/bookings/{id}/cancel", id).then().statusCode(200)
@@ -58,6 +71,8 @@ class BookingApiTest extends ApiTestBase {
 	}
 
 	@Test
+	@Story("Cancel")
+	@DisplayName("Cancelling twice returns 409 ILLEGAL_TRANSITION")
 	void cancelTwiceReturns409() {
 		String id = create().path("id");
 		given().post("/bookings/{id}/cancel", id).then().statusCode(200);
@@ -66,6 +81,8 @@ class BookingApiTest extends ApiTestBase {
 	}
 
 	@Test
+	@Story("Hold expiry")
+	@DisplayName("GET after the hold window shows EXPIRED")
 	void getAfterHoldExpiryShowsExpired() {
 		String id = create().path("id");
 		clock.advance(Duration.ofMinutes(10).plusSeconds(1));

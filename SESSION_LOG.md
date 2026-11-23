@@ -48,3 +48,13 @@
 - Test support first: `MutableClock.reset`, `TestClockConfig` (@Primary MutableClock), `ApiTestBase` (RANDOM_PORT, resets clock + repository), `HealthApiTest` moved onto it; wrote `BookingApiTest` (create, get, 404, cancel, cancel twice 409, expiry).
 - Added `CreateBookingRequest` (seats `Integer`, @NotNull @Min(1) @Max(6)), `BookingResponse`, `BookingNotFoundException`, `BookingService`, `BookingController`, `InMemoryBookingRepository.deleteAll()`, and `common/ApiExceptionHandler` (VALIDATION_FAILED for bean validation and unreadable bodies, BOOKING_NOT_FOUND, ILLEGAL_TRANSITION; ProblemDetail + `code`).
 - `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 40 tests. Committed on the branch; nothing pushed.
+
+## Slice 4: allure-pages (branch `slice-4-allure-pages`)
+
+- Branched from `main` (ac5674a, slice 3 merged as PR #4). Local `main` was stale, fast-forwarded first.
+- `pom.xml`: `allure-bom` 3.1.1 in `dependencyManagement`; test deps `allure-jupiter` and `allure-rest-assured` (no versions, no allure-junit5 2.x, no AspectJ); `allure-maven` 3.1.0 with `reportVersion` 3.17.0.
+- `src/test/resources/allure.properties`: results go to `target/allure-results`. `.gitignore` already covered `.allure/`, `allure-results/` and `target/`.
+- `ApiTestBase`: `AllureRestAssured` filter registered once behind a static guard in `resetState()`.
+- Added `@Feature`/`@Story`/`@DisplayName` to `HealthApiTest`, `BookingApiTest`, `BookingValidationApiTest` (class renamed from `BookingValidationAPITest` to match its file name).
+- `ci.yml`: kept `build` job and triggers; added workflow `permissions: contents: read`; upload `allure-results` with `if: always()`; on push to main only: `allure:report` + `upload-pages-artifact@v5` (no `always()`); new `deploy` job (needs build, pages: write + id-token: write, github-pages environment, concurrency group `pages` without cancel, configure-pages@v6, deploy-pages@v5).
+- `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 48 tests. `allure:report` wrote `target/site/allure-maven-plugin/index.html` (path matches ci.yml, no change needed). Each HTTP call produces exactly one "HTTP exchange" attachment (request + response together), so the filter is not stacked. Committed on the branch; nothing pushed.
