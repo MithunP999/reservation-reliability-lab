@@ -2,22 +2,16 @@ package io.github.mithunp999.reservationlab;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-class HealthApiTest {
+import io.github.mithunp999.reservationlab.support.ApiTestBase;
 
-	@LocalServerPort
-	int port;
+class HealthApiTest extends ApiTestBase {
 
 	@Test
 	void healthEndpointReportsUp() {
 		given()
-			.port(port)
 		.when()
 			.get("/actuator/health")
 		.then()
