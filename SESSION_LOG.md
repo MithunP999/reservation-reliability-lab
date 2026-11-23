@@ -41,3 +41,7 @@
 - Added `BookingStatus.canMoveTo` (switch, no default), `IllegalTransitionException`, `Booking` record, `BookingProperties` (+ `booking.hold-duration: 10m`, `@ConfigurationPropertiesScan`), `BookingRepository` + `InMemoryBookingRepository`.
 - `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 9 tests pass, no `Thread.sleep` in `src/`. Committed on the branch; nothing pushed.
 - Fixed misplaced `junit-jupiter-params` dependency in `pom.xml` (was outside `<dependencies>`); added Max's `BookingStatusTransitionTest`. `verify` green, 34 tests.
+
+## Slice 3: booking-api (branch `slice-3-booking-api`)
+
+- Branched from `main` (b7291c1, slice 2 merged as PR #2). Housekeeping commit: merged `includeCoAuthoredBy: false` into the existing `.claude/settings.json` (kept its deny/ask rules) and added the no-attribution rule to `CLAUDE.md`. `spring-boot-starter-validation` was already in `pom.xml`.
