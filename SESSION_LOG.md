@@ -69,3 +69,4 @@
 - No Idempotency-Key handling yet (slice 6). Each charge attempt uses its new paymentId as the gateway idempotency key. Payments are not stored.
 - Known gap: if the gateway call throws, the booking stays PAYMENT_PENDING and the API returns 500 (with the placeholder bean, every production call); slice 7a resolves this with timeout handling.
 - `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 61 tests, no `Thread.sleep` in `src/`. Committed on the branch; nothing pushed.
+- Added the pay-after-expiry test (written by Max): 409, no gateway call, booking EXPIRED. `verify` -> BUILD SUCCESS, 62 tests.

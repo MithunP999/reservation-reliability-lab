@@ -19,6 +19,7 @@ import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import java.time.Duration;
 
 @Feature("Payments")
 @DisplayName("Payment API")
@@ -82,6 +83,20 @@ class PaymentApiTest extends ApiTestBase {
 		pay(id, VALID).then().statusCode(409).body("code", equalTo("ILLEGAL_TRANSITION"));
 
 		assertThat(gateway.calls()).isEmpty();
+	}
+
+	@Test 
+	@Story("Illegal state")
+	@DisplayName("Paying after the hold has expired returns 409 and never calls the gateway")
+	void payExpiredReturns409WithoutGatewayCall() {
+		String id = createHeld();
+		// Simulate hold expiration 
+		clock.advance(Duration.ofMinutes(10).plusSeconds(1));
+
+		pay(id, VALID).then().statusCode(409).body("code", equalTo("ILLEGAL_TRANSITION"));
+
+		assertThat(gateway.calls()).isEmpty();
+		assertStatus(id, "EXPIRED");
 	}
 
 	@Test
