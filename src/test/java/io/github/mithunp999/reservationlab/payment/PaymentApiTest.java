@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
@@ -17,8 +16,6 @@ import io.github.mithunp999.reservationlab.gateway.ChargeRequest;
 import io.github.mithunp999.reservationlab.support.ApiTestBase;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
 import java.time.Duration;
 
 @Feature("Payments")
@@ -28,36 +25,22 @@ class PaymentApiTest extends ApiTestBase {
 	private static final String VALID = """
 			{"amountMinor": 150000, "currency": "INR"}""";
 
-	private String createHeld() {
-		return given().contentType(ContentType.JSON)
-				.body(Map.of("eventId", "evt-1", "seats", 2, "customerEmail", "a@example.test"))
-				.post("/bookings").then().statusCode(201).extract().path("id");
-	}
-
-	private Response pay(String bookingId, String body) {
-		return given().contentType(ContentType.JSON).body(body).post("/bookings/{id}/payments", bookingId);
-	}
-
-	private void assertStatus(String bookingId, String status) {
-		given().get("/bookings/{id}", bookingId).then().statusCode(200).body("status", equalTo(status));
-	}
-
 	@Test
 	@Story("Charge accepted")
 	@DisplayName("Paying a held booking returns 201 and moves it to PAYMENT_PENDING")
 	void payHeldReturns201AndPaymentPending() {
 		String id = createHeld();
 
-		String paymentId = pay(id, VALID).then().statusCode(201)
+		pay(id, VALID, "key-1").then().statusCode(201)
 				.body("paymentId", notNullValue())
 				.body("bookingId", equalTo(id))
 				.body("gatewayRef", equalTo("fake-ref-1"))
-				.body("status", equalTo("PENDING"))
-				.extract().path("paymentId");
+				.body("status", equalTo("PENDING"));
 
 		assertStatus(id, "PAYMENT_PENDING");
+		// The gateway gets the client's Idempotency-Key, so a retry is deduplicated there too.
 		assertThat(gateway.calls())
-				.containsExactly(new ChargeRequest(UUID.fromString(id), 150000L, "INR", paymentId));
+				.containsExactly(new ChargeRequest(UUID.fromString(id), 150000L, "INR", "key-1"));
 	}
 
 	@Test

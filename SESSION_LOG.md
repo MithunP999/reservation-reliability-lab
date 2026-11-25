@@ -70,3 +70,17 @@
 - Known gap: if the gateway call throws, the booking stays PAYMENT_PENDING and the API returns 500 (with the placeholder bean, every production call); slice 7a resolves this with timeout handling.
 - `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 61 tests, no `Thread.sleep` in `src/`. Committed on the branch; nothing pushed.
 - Added the pay-after-expiry test (written by Max): 409, no gateway call, booking EXPIRED. `verify` -> BUILD SUCCESS, 62 tests.
+
+## Slice 6: idempotency (branch `slice-6-idempotency`)
+
+- Branched from `main` (1198465, slice 5 merged as PR #8).
+- Tests first: `FakePaymentGateway.failNext(n)`; `ApiTestBase` resets the idempotency store and now holds the shared `createHeld`/`pay`/`assertStatus` helpers (`pay` sends an `Idempotency-Key`); `IdempotencyApiTest`, `IdempotencyStoreTest`, `ConcurrentDifferentKeyPaymentTest` (@RepeatedTest(20), 10 threads, one latch). `ConcurrentDoublePaymentTest` (same key) is left to Max.
+- `POST /bookings/{id}/payments` requires `Idempotency-Key` (`[A-Za-z0-9_-]{1,64}`), else 400 IDEMPOTENCY_KEY_REQUIRED. An invalid body still returns 400 VALIDATION_FAILED first.
+- `payment/IdempotencyStore`: the store's atomicity comes from a single `ConcurrentHashMap.compute` per key, which decides NEW / RESUME / REPLAY / IN_PROGRESS / REUSED. After that, only the request that set IN_PROGRESS changes the entry, with `replace(key, owned, next)`. No get-then-put. Fingerprint = record `(bookingId, amountMinor, currency)`: exact equality in memory, no hashing needed.
+- Stored and replayed (with `Idempotent-Replayed: true`): 201, 402 PAYMENT_DECLINED, 409 ILLEGAL_TRANSITION, 404. Not stored: 400, 409 IDEMPOTENCY_IN_PROGRESS, 422 IDEMPOTENCY_KEY_REUSED, 503 GATEWAY_UNAVAILABLE.
+- Gateway throws: booking stays PAYMENT_PENDING, entry RETRYABLE, 503. Retry with the same key skips the booking claim and charges again with the same key and paymentId. The gateway now gets the client's key, not the paymentId.
+- On decline, the booking is released to HELD before the 402 is stored.
+- `PaymentDeclinedException` removed; shared `common/Problems` and `common/ApiProblemException` added.
+- Mutation check: with the booking claim changed to a plain `save`, `ConcurrentDifferentKeyPaymentTest` failed 8 of 20 repetitions. Reverted.
+- Out of scope: keys never expire or get cleaned up (the map grows without bound), and the store is lost on restart.
+- `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 97 tests, no `Thread.sleep` in `src/`. Committed on the branch; nothing pushed.
