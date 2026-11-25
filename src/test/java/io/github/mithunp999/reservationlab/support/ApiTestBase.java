@@ -11,7 +11,7 @@ import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestClockConfig.class)
+@Import({ TestClockConfig.class, TestGatewayConfig.class })
 public abstract class ApiTestBase {
 
 	@LocalServerPort
@@ -22,6 +22,9 @@ public abstract class ApiTestBase {
 
 	@Autowired
 	InMemoryBookingRepository bookings;
+
+	@Autowired
+	protected FakePaymentGateway gateway;
 
 	private static boolean allureFilterAdded;
 
@@ -36,5 +39,6 @@ public abstract class ApiTestBase {
 		}
 		clock.reset(TestClockConfig.START);
 		bookings.deleteAll();
+		gateway.reset();
 	}
 }

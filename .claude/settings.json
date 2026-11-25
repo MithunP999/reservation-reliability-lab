@@ -15,7 +15,8 @@
       "PowerShell(git merge *)",
       "PowerShell(gh pr merge *)",
       "Read(./.env)",
-      "Read(./.env.*)"
+      "Read(./.env.*)",
+      "Bash(gh pr merge:*)"
     ],
     "ask": [
       "Bash(git push *)",

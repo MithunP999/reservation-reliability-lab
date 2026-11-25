@@ -2,6 +2,7 @@ package io.github.mithunp999.reservationlab.booking;
 
 import java.time.Clock;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 
 import org.springframework.stereotype.Service;
 
@@ -24,13 +25,25 @@ public class BookingService {
 	}
 
 	public Booking get(UUID id) {
-		Booking stored = find(id);
-		Booking fresh = stored.refreshExpiry(clock);
-		return fresh.equals(stored) ? stored : repository.save(fresh);
+		return update(id, booking -> booking.refreshExpiry(clock));
 	}
 
 	public Booking cancel(UUID id) {
-		return repository.save(find(id).cancel(clock));
+		return update(id, booking -> booking.cancel(clock));
+	}
+
+	/**
+	 * Compare-and-set with retry, so a write based on a stale read can never overwrite a payment claim. A lost race
+	 * re-reads, and the domain rules are applied to the new state.
+	 */
+	private Booking update(UUID id, UnaryOperator<Booking> change) {
+		while (true) {
+			Booking stored = find(id);
+			Booking changed = change.apply(stored);
+			if (changed.equals(stored) || repository.replace(stored, changed)) {
+				return changed;
+			}
+		}
 	}
 
 	private Booking find(UUID id) {
