@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import io.github.mithunp999.reservationlab.booking.BookingNotFoundException;
 import io.github.mithunp999.reservationlab.booking.IllegalTransitionException;
-import io.github.mithunp999.reservationlab.payment.PaymentDeclinedException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -32,25 +31,22 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(BookingNotFoundException.class)
 	ProblemDetail notFound(BookingNotFoundException e) {
-		return problem(HttpStatus.NOT_FOUND, "BOOKING_NOT_FOUND", e.getMessage(), null);
+		return Problems.of(HttpStatus.NOT_FOUND, "BOOKING_NOT_FOUND", e.getMessage());
 	}
 
 	@ExceptionHandler(IllegalTransitionException.class)
 	ProblemDetail illegalTransition(IllegalTransitionException e) {
-		return problem(HttpStatus.CONFLICT, "ILLEGAL_TRANSITION", e.getMessage(), null);
+		return Problems.of(HttpStatus.CONFLICT, "ILLEGAL_TRANSITION", e.getMessage());
 	}
 
-	@ExceptionHandler(PaymentDeclinedException.class)
-	ProblemDetail paymentDeclined(PaymentDeclinedException e) {
-		return problem(HttpStatus.PAYMENT_REQUIRED, "PAYMENT_DECLINED", e.getMessage(), null);
+	@ExceptionHandler(ApiProblemException.class)
+	ProblemDetail apiProblem(ApiProblemException e) {
+		return Problems.of(e.status(), e.code(), e.getMessage());
 	}
 
 	private static ProblemDetail problem(HttpStatus status, String code, String detail, List<?> errors) {
-		ProblemDetail p = ProblemDetail.forStatusAndDetail(status, detail);
-		p.setProperty("code", code);
-		if (errors != null) {
-			p.setProperty("errors", errors);
-		}
+		ProblemDetail p = Problems.of(status, code, detail);
+		p.setProperty("errors", errors);
 		return p;
 	}
 }
