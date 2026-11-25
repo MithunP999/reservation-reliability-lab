@@ -5,3 +5,8 @@ management:
         include: health
 booking:
   hold-duration: 10m
+spring:
+  jackson:
+    deserialization:
+      # Money is whole minor units: reject 10.9 instead of silently cutting it to 10.
+      accept-float-as-int: false

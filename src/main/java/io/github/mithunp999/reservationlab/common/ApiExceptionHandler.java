@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import io.github.mithunp999.reservationlab.booking.BookingNotFoundException;
 import io.github.mithunp999.reservationlab.booking.IllegalTransitionException;
+import io.github.mithunp999.reservationlab.payment.PaymentDeclinedException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -37,6 +38,11 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(IllegalTransitionException.class)
 	ProblemDetail illegalTransition(IllegalTransitionException e) {
 		return problem(HttpStatus.CONFLICT, "ILLEGAL_TRANSITION", e.getMessage(), null);
+	}
+
+	@ExceptionHandler(PaymentDeclinedException.class)
+	ProblemDetail paymentDeclined(PaymentDeclinedException e) {
+		return problem(HttpStatus.PAYMENT_REQUIRED, "PAYMENT_DECLINED", e.getMessage(), null);
 	}
 
 	private static ProblemDetail problem(HttpStatus status, String code, String detail, List<?> errors) {

@@ -58,3 +58,14 @@
 - Added `@Feature`/`@Story`/`@DisplayName` to `HealthApiTest`, `BookingApiTest`, `BookingValidationApiTest` (class renamed from `BookingValidationAPITest` to match its file name).
 - `ci.yml`: kept `build` job and triggers; added workflow `permissions: contents: read`; upload `allure-results` with `if: always()`; on push to main only: `allure:report` + `upload-pages-artifact@v5` (no `always()`); new `deploy` job (needs build, pages: write + id-token: write, github-pages environment, concurrency group `pages` without cancel, configure-pages@v6, deploy-pages@v5).
 - `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 48 tests. `allure:report` wrote `target/site/allure-maven-plugin/index.html` (path matches ci.yml, no change needed). Each HTTP call produces exactly one "HTTP exchange" attachment (request + response together), so the filter is not stacked. Committed on the branch; nothing pushed.
+
+## Slice 5: payment-endpoint (branch `slice-5-payment-endpoint`)
+
+- Branched from `main` (2254663, slice 4 merged as PR #6). Housekeeping commit: `Bash(gh pr merge:*)` added to the `deny` list in `.claude/settings.json`.
+- Tests first: `FakePaymentGateway` + `TestGatewayConfig` (@Primary), `ApiTestBase` resets the fake, `PaymentApiTest`, `InMemoryBookingRepositoryTest`. The "pay after expiry" test is left to Max.
+- Added `gateway/` (`PaymentGateway`, `ChargeRequest`, `ChargeResult`, placeholder bean that throws "gateway not configured") and `payment/` (`POST /bookings/{id}/payments`: refresh expiry, claim HELD -> PAYMENT_PENDING with `replace`, then call the gateway; 201 on PENDING, 402 PAYMENT_DECLINED and back to HELD on DECLINED).
+- `BookingRepository.replace` (compare-and-set). `BookingService.get`/`cancel` now use it in a retry loop, so a stale write cannot overwrite a payment claim.
+- `spring.jackson.deserialization.accept-float-as-int: false`: without it the `amountMinor: 10.9` test row failed (value was accepted); with it, 400. Also rejects decimal `seats`.
+- No Idempotency-Key handling yet (slice 6). Each charge attempt uses its new paymentId as the gateway idempotency key. Payments are not stored.
+- Known gap: if the gateway call throws, the booking stays PAYMENT_PENDING and the API returns 500 (with the placeholder bean, every production call); slice 7a resolves this with timeout handling.
+- `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 61 tests, no `Thread.sleep` in `src/`. Committed on the branch; nothing pushed.

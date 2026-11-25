@@ -23,6 +23,11 @@ public class InMemoryBookingRepository implements BookingRepository {
 		return Optional.ofNullable(store.get(id));
 	}
 
+	@Override
+	public boolean replace(Booking expected, Booking updated) {
+		return store.replace(expected.id(), expected, updated);
+	}
+
 	/** For test reset only. */
 	public void deleteAll() {
 		store.clear();
