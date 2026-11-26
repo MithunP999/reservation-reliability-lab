@@ -84,3 +84,15 @@
 - Mutation check: with the booking claim changed to a plain `save`, `ConcurrentDifferentKeyPaymentTest` failed 8 of 20 repetitions. Reverted.
 - Out of scope: keys never expire or get cleaned up (the map grows without bound), and the store is lost on restart.
 - `.\mvnw.cmd -B verify` -> BUILD SUCCESS, 97 tests, no `Thread.sleep` in `src/`. Committed on the branch; nothing pushed.
+
+## Slice 7a: wiremock-retries (branch `slice-7a-wiremock-retries`)
+
+- Branched from `main` (c3fb2c2, slice 6 merged as PR #10).
+- `pom.xml`: `spring-boot-starter-restclient`; test deps `wiremock-spring-boot-standalone` 4.4.3 and `awaitility` (no version).
+- Test wiring: shared setup moved to `support/ApiTestSupport`; `ApiTestBase` extends it and adds the @Primary fake gateway. `GatewayRetryApiTest` extends `ApiTestSupport`, so the real `HttpPaymentGateway` is its only gateway.
+- `gateway/`: `GatewayProperties` (connect 1s, read 2s, 3 attempts), `GatewayClientConfig` (explicit `RestClient` on an HTTP/1.1 `HttpClient`), `HttpPaymentGateway` (replaces the "not configured" placeholder; 402 -> DECLINED), `RetryPolicy` + `Sleeper` (backoff 200ms, 400ms; same Idempotency-Key). `application.yml` has a fictional local `gateway.base-url`.
+- `RetryPolicy.isRetryable` (Max's part): retry on 5xx or any `IOException` in the cause chain; never 4xx.
+- Retries exhausted: slice 6's path, unchanged (entry RETRYABLE, booking stays PAYMENT_PENDING, 503, not stored). `PaymentService` was not modified.
+- The first gateway call in a fresh JVM took about 650ms, above the test's 300ms read timeout, so `GatewayRetryApiTest` warms up the client once (Awaitility) and then resets WireMock.
+- Out of scope: callbacks (slice 7b).
+- `.\mvnw.cmd -B clean verify` -> BUILD SUCCESS, 121 tests, no `Thread.sleep(...)` calls in `src/` (the production `Sleeper` bean is `Thread::sleep`).

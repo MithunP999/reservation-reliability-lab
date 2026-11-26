@@ -5,6 +5,9 @@ management:
         include: health
 booking:
   hold-duration: 10m
+gateway:
+  # Fictional local default; real deployments override it.
+  base-url: http://localhost:8089
 spring:
   jackson:
     deserialization:
